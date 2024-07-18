@@ -1,0 +1,29 @@
+version: '3'
+services:
+  redis:
+    image: redis:4.0.6-alpine
+    ports:
+      - "6379:6379"
+    container_name: redis
+
+  server:
+    image: ghcr.io/attuneintelligence/redis-agent-server:main
+    build:
+      context: server
+      dockerfile: server.Dockerfile
+    volumes:
+      - ./server/:/workspace/redis-agent
+    ports:
+      - "8888:8888"
+      - "5001:5000"
+    container_name: server
+
+  worker:
+    image: ghcr.io/attuneintelligence/redis-agent-server:main
+    depends_on:
+      - redis
+      - server
+    command: rq worker --url redis://redis:6379
+    links:
+      - redis
+    container_name: worker

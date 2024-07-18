@@ -1,0 +1,59 @@
+[
+    {
+        "type": "function",
+        "function": {
+            "name": "search_pubmed",
+            "description": "This function will search for peer-reviewed clinical and biomedical research literature from Pubmed.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "descriptive search query related to the biomedical sciences"
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        }
+    }, 
+    {
+        "type": "function",
+        "function": {
+            "name": "search_arXiv",
+            "description": "This function will search for open-access articles in the fields of Physics, Mathematics, Computer Science, Quantitative Biology, Quantitative Finance, and Statistics.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "descriptive search query related to the physical sciences"
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        }
+    }, 
+    {
+        "type": "function",
+        "function": {
+            "name": "search_clinical_trials",
+            "description": "This function will search ClinicalTrials.gov to find current clinical trials being conducted or proposed.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "descriptive search query related to current clinical trials"
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        }
+    }
+]
