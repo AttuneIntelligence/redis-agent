@@ -1,4 +1,4 @@
-name: Build the Redis Agent
+name: RedisAgentBuild
 
 on:
   push:

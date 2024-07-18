@@ -32,10 +32,10 @@ RUN pip install --upgrade pip && \
 EXPOSE 8888
 EXPOSE 5000
 
+
 ### START THE ENGINE
 CMD ["python", "main.py"]
 # CMD ["/bin/sh", "-c", "bash"]
 
 ########################
-########################
-################################################
+
