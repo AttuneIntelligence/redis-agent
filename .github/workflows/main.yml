@@ -36,20 +36,6 @@ jobs:
       - name: Get the current date
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> ${GITHUB_ENV}
 
-      # - name: Build and Push Client
-      #   uses: docker/build-push-action@v3
-      #   with:
-      #     context: client
-      #     file: client/client.Dockerfile
-      #     push: true
-      #     tags: |
-      #       ${{ secrets.CLIENT_REGISTRY_IMAGE }}:main-${{ env.CURRENT_DATE }}
-      #       ${{ secrets.CLIENT_REGISTRY_IMAGE }}:main
-      #     cache-from: |
-      #       type=registry,ref=${{ secrets.CLIENT_REGISTRY_IMAGE }}:main
-      #     cache-to: |
-      #       type=inline
-
       - name: Build and Push Server
         uses: docker/build-push-action@v3
         with:
@@ -59,7 +45,7 @@ jobs:
           tags: |
             ${{ secrets.SERVER_REGISTRY_IMAGE }}:main-${{ env.CURRENT_DATE }}
             ${{ secrets.SERVER_REGISTRY_IMAGE }}:main
-          cache-from: |
-            type=registry,ref=${{ secrets.SERVER_REGISTRY_IMAGE }}:main
-          cache-to: |
-            type=inline
+          # cache-from: |
+          #   type=registry,ref=${{ secrets.SERVER_REGISTRY_IMAGE }}:main
+          # cache-to: |
+          #   type=inline
