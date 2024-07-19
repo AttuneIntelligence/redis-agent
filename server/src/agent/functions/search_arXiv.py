@@ -33,12 +33,11 @@ def search_arXiv(query,
 
         if pdf_link:
             arxiv_json = {
-                r.title: {
-                    "description": str(r.summary).replace("\n", " "),
-                    "publication_date": publication_date,
-                    "authors": authors,
-                    "link": str(pdf_link)
-                }
+                "title": r.title,
+                "description": str(r.summary).replace("\n", " "),
+                "publication_date": publication_date,
+                "authors": authors,
+                "link": str(pdf_link)
             }
             all_arxiv_results.append(arxiv_json)
 

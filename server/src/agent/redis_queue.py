@@ -45,5 +45,5 @@ class Agent_Queue:
             while job.result is None:
                 time.sleep(1)
                 job.refresh()
-            results.append(job.result)
+            results.extend(job.result)
         return results

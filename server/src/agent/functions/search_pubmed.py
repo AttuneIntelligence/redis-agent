@@ -43,13 +43,12 @@ def search_pubmed(query,
             abstract = "No abstract"
 
         paper_result = {
-            title: {
-                "authors": authors,
-                "keywords": keywords,
-                "publication_date": str(publication_date),
-                "abstract": abstract,
-                "link": doi
-            }
+            "title": title,
+            "authors": authors,
+            "keywords": keywords,
+            "publication_date": str(publication_date),
+            "abstract": abstract,
+            "link": doi
         }
         pubmed_results.append(paper_result)
 

@@ -22,10 +22,9 @@ def search_clinical_trials(query,
             else:
                 url = None
             result.append({
-                title: {
-                    'description': description,
-                    'link': url
-                }
+                'title' title,
+                'description': description,
+                'link': url
             })
         if result:
             return result
