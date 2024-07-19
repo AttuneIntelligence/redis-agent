@@ -1,7 +1,7 @@
 import arxiv
 
 def search_arXiv(query,
-                 n_results=2):
+                 n_results=3):
     ### GET SEARCH RESULT
     client = arxiv.Client()
     search = arxiv.Search(
@@ -10,6 +10,8 @@ def search_arXiv(query,
       sort_by = arxiv.SortCriterion.SubmittedDate
     )
     results = client.results(search)
+    if not results:
+        return None
     
     ### COMPILE TO JSON
     all_arxiv_results = []

@@ -40,3 +40,5 @@ vecs==0.4.3
 crossrefapi==1.6.0
 redis==5.0.7
 rq==1.16.2
+pypatent==1.2.0
+# rq-dashboard==0.7.1.2

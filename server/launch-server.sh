@@ -16,7 +16,7 @@ export SERVER_REGISTRY_IMAGE="ghcr.io/attuneintelligence/redis-agent-server"
 run_docker() {
   docker run -it \
     --name redis-agent-server \
-    -p 8888:8888 -p 5001:5000 \
+    -p 8888:8888 -p 5001:5000 -p 9181:9181 \
     -v .:/workspace/redis-agent \
     --network redis-network \
     ${SERVER_REGISTRY_IMAGE}:main /bin/bash -c "$1"

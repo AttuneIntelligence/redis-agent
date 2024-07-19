@@ -11,7 +11,7 @@ def clean_text(input_text):
 
 def search_pubmed(query,
                   n_results=3):
-    pubmed = PubMed(tool="Redis-Agent", email="reedbender@attuneintelligence.com")   ### REMOVE HARDCODED EMAIL AUTH
+    pubmed = PubMed(tool="Redis-Agent", email="user@redisagent.com")
     results = pubmed.query(query, max_results=n_results)
 
     ### COMPILE RESULTS
@@ -40,14 +40,14 @@ def search_pubmed(query,
             if len(abstract) > 2400:
                 abstract = f"{abstract[2400:]} ..."
         except:
-            abstract = "No abstract"
+            abstract = "No abstract provided."
 
         paper_result = {
             "title": title,
             "authors": authors,
             "keywords": keywords,
             "publication_date": str(publication_date),
-            "abstract": abstract,
+            "description": abstract,
             "link": doi
         }
         pubmed_results.append(paper_result)
@@ -55,4 +55,4 @@ def search_pubmed(query,
     if pubmed_results:
         return pubmed_results
     else:
-        return f"No results were returned for the query '{query}'. Try again with another search or use a different tool."
+        return None

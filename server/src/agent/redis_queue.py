@@ -1,9 +1,8 @@
 import sys
 from random import choice
 import requests
-from rq import Queue
 import redis
-from rq import Queue
+from rq import Queue, Worker
 from rq.job import Job
 import time
 
@@ -20,6 +19,9 @@ class Agent_Queue:
     def queue_function_calls(self,
                              query_list):
         timer = Timer()
+        if not Worker.all(connection=self.redis_connection):
+            print(f"==> [Error] No Redis workers found to be available.")
+            return None
         job_ids = self.enqueue_tasks(query_list)
         results = self.fetch_results(job_ids)
         time_taken = timer.get_elapsed_time()

@@ -28,7 +28,7 @@
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "descriptive search query related to the physical sciences"
+                        "description": "descriptive search query related to the physical or computational sciences"
                     }
                 },
                 "required": [
@@ -47,7 +47,26 @@
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "descriptive search query related to current clinical trials"
+                        "description": "descriptive search query for a clinical trial"
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        }
+    },
+    {
+        "type": "serpapi_search",
+        "function": {
+            "name": "uspto",
+            "description": "This function will search thew US Patent & Trademark Office for granted patents.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "descriptive search query for a filed or granted patent"
                     }
                 },
                 "required": [

@@ -22,13 +22,14 @@ def search_clinical_trials(query,
             else:
                 url = None
             result.append({
-                'title' title,
+                'title': title,
                 'description': description,
                 'link': url
             })
         if result:
             return result
         else:
-            return f"No clinical trials were found for the search '{query}'. Try again with a different search or use another tool."
+            return None
     else:
-        return f"Search for clinical trials with the search '{query}' returned with a failure."
+        print(f"Search for clinical trials with the search '{query}' returned with a failure.")
+        return None
