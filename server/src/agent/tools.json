@@ -57,16 +57,92 @@
         }
     },
     {
-        "type": "serpapi_search",
+        "type": "serpapi",
         "function": {
-            "name": "uspto",
-            "description": "This function will search thew US Patent & Trademark Office for granted patents.",
+            "name": "search_us_patent_office",
+            "description": "This function will search the US Patent & Trademark Office for granted patents.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "query": {
                         "type": "string",
                         "description": "descriptive search query for a filed or granted patent"
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        }
+    },
+    {
+        "type": "serpapi",
+        "function": {
+            "name": "search_internet",
+            "description": "This function will search the internet for content URLs.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "descriptive google search query"
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        }
+    },
+    {
+        "type": "serpapi",
+        "function": {
+            "name": "search_neurips",
+            "description": "This function will search across the Neurips computer science journal proceedings.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "descriptive search query for neurips journal proceeding articles"
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        }
+    },
+    {
+        "type": "serpapi",
+        "function": {
+            "name": "search_github",
+            "description": "This function will Github for code repositories and users.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "descriptive search query for Github"
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        }
+    },
+    {
+        "type": "serpapi",
+        "function": {
+            "name": "search_academic_scholars",
+            "description": "This function will search for the google scholar academic profile for researchers.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "the name of a research or academic scientist"
                     }
                 },
                 "required": [

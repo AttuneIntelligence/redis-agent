@@ -42,3 +42,4 @@ redis==5.0.7
 rq==1.16.2
 pypatent==1.2.0
 # rq-dashboard==0.7.1.2
+biorxiv_retriever==0.20.1

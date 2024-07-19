@@ -34,6 +34,7 @@ class Agent_Queue:
         q = Queue(connection=self.redis_connection)
         job_ids = []
         for function_call in query_list:
+            function_call['n_results'] = self.MyAgent.Toolkit.n_function_responses   ### PASS CLASS LIMIT TO STATIC METHODS
             job = q.enqueue(self.MyAgent.Toolkit.execute_function_call, function_call, self.MyAgent.Toolkit.all_tools)
             job_ids.append(job.id)
         return job_ids
