@@ -8,15 +8,20 @@ import requests
 import inspect
 from termcolor import colored
 from serpapi import GoogleSearch
+import chromadb
+from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
 
 class Toolkit:
     def __init__(self,
                  MyAgent):
         self.MyAgent = MyAgent
         self.tools_json = f"{self.MyAgent.home}src/agent/tools.json"
+        self.n_function_responses = 3   ### PASSED TO EACH FUNCTION CALL AS A STATIC OBJECT
+
+        ### DEFINE THE TOOLSET VECTOR DATABASE
         self.all_tools = self.load_tools()
         self.tool_definitions = self.load_tool_metadata()
-        self.n_function_responses = 3
+        self.toolkit_db = self.create_toolkit_db()
             
     def read_tools(self):
         with open(self.tools_json, 'r') as file:
@@ -77,7 +82,20 @@ class Toolkit:
         else:
             print(f"Error: Incorrect argument keys. Expected: {', '.join(expected_params)}")
             return None
-            
+
+    def create_toolkit_db(self):
+        timer = Timer()
+        ### DEFINE THE DATABASE
+        chroma_client = chromadb.EphemeralClient()
+        embedding_function = OpenAIEmbeddingFunction(api_key=self.MyAgent.OPENAI_API_KEY, model_name="text-embedding-3-small")
+        db = chroma_client.create_collection(name='toolset_vectorstore', embedding_function=embedding_function)
+        db.add(
+            documents=[tool['description'] for tool in self.tool_definitions],
+            ids=[tool['name'] for tool in self.tool_definitions]
+        )
+        time_taken = timer.get_elapsed_time()
+        print(f'==> Toolkit vector db created in {time_taken} seconds.')
+        return db
 
 
 

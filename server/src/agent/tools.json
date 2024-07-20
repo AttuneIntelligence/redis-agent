@@ -3,7 +3,7 @@
         "type": "function",
         "function": {
             "name": "search_pubmed",
-            "description": "This function will search for peer-reviewed clinical and biomedical research literature from Pubmed.",
+            "description": "Search peer-reviewed clinical and biomedical research literature from Pubmed.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -22,7 +22,7 @@
         "type": "function",
         "function": {
             "name": "search_arXiv",
-            "description": "This function will search for open-access articles in the fields of Physics, Mathematics, Computer Science, Quantitative Biology, Quantitative Finance, and Statistics.",
+            "description": "Search open-access articles in the fields of Physics, Mathematics, Computer Science, Quantitative Biology, Quantitative Finance, and Statistics.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -41,7 +41,7 @@
         "type": "function",
         "function": {
             "name": "search_clinical_trials",
-            "description": "This function will search ClinicalTrials.gov to find current clinical trials being conducted or proposed.",
+            "description": "Search ClinicalTrials.gov to find current clinical trials being conducted or proposed.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -60,7 +60,7 @@
         "type": "serpapi",
         "function": {
             "name": "search_us_patent_office",
-            "description": "This function will search the US Patent & Trademark Office for granted patents.",
+            "description": "Search the US Patent & Trademark Office for granted patents.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -79,7 +79,7 @@
         "type": "serpapi",
         "function": {
             "name": "search_internet",
-            "description": "This function will search the internet for content URLs.",
+            "description": "Search the internet for diverse content and resource URLs.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -98,7 +98,7 @@
         "type": "serpapi",
         "function": {
             "name": "search_neurips",
-            "description": "This function will search across the Neurips computer science journal proceedings.",
+            "description": "Search the Neurips computer science conference proceedings.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -117,7 +117,7 @@
         "type": "serpapi",
         "function": {
             "name": "search_github",
-            "description": "This function will Github for code repositories and users.",
+            "description": "Search Github for code repositories and users.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -136,7 +136,7 @@
         "type": "serpapi",
         "function": {
             "name": "search_academic_scholars",
-            "description": "This function will search for the google scholar academic profile for researchers.",
+            "description": "Search for the Google Scholar academic profile of human researchers.",
             "parameters": {
                 "type": "object",
                 "properties": {
