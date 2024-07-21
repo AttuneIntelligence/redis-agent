@@ -13,7 +13,7 @@ def clean_text(input_text):
 def search_pubmed(query,
                   n_results=3):
     ### SETUP PUBMED
-    pubmed = PubMed(tool="Redis-Agent", email="reedbndr@gmail.com")
+    pubmed = PubMed(tool="Redis-Agent", email=os.getenv("PUBMED_EMAIL"))
     pubmed.parameters.update({'api_key': os.getenv("PUBMED_API_KEY")})
     pubmed._rateLimit = 50
 
@@ -43,6 +43,8 @@ def search_pubmed(query,
         publication_date = article.publication_date
         try:
             abstract = clean_text(article.abstract)
+            if not abstract:
+                continue
             if len(abstract) > 2400:
                 abstract = f"{abstract[2400:]} ..."
         except:

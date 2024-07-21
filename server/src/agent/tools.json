@@ -36,7 +36,7 @@
                 ]
             }
         }
-    }, 
+    },
     {
         "type": "function",
         "function": {
@@ -48,6 +48,25 @@
                     "query": {
                         "type": "string",
                         "description": "descriptive search query for a clinical trial"
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_wikipedia",
+            "description": "Search Wikipedia for basic information about any concept or individual.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "descriptive search query for wikipedia articles"
                     }
                 },
                 "required": [

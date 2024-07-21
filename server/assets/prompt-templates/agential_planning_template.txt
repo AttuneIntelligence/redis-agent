@@ -39,7 +39,7 @@ Your plan MUST be presented in the following JSON format:
     "step_n": {{
         "description": "Compile the retrieved information into a final answer.",
         "actions": [
-            {{"function": "return_answer", "query": ""}}
+            {{"function": "return_answer"}}
         ]
     }}
 }}
@@ -79,14 +79,14 @@ User Question: "What are the latest developments in the clinical research for ps
         "actions": [
             {{"function": "search_academic_scholars", "query": "<name of key researcher A> psychedelic therapy"}},
             {{"function": "search_academic_scholars", "query": "<name of key researcher B> psilocybin research"}},
-            {{"function": "search_internet", "query": "<name of key researcher A> latest psychedelic studies"}},
-            {{"function": "search_internet", "query": "<name of key researcher B> recent MDMA therapy findings"}}
+            {{"function": "search_pubmed", "query": "<name of key researcher A> psychedelic studies"}},
+            {{"function": "search_pubmed", "query": "<name of key researcher B> MDMA therapy"}}
         ]
     }},
     "step_3": {{
         "description": "Compile the retrieved information into a final answer.",
         "actions": [
-            {{"function": "return_answer", "query": ""}}
+            {{"function": "return_answer"}}
         ]
     }}
 }}
@@ -109,7 +109,7 @@ User Question: "What are the current applications of quantum computing in crypto
     "step_2": {{
         "description": "Compile the retrieved information into a final answer.",
         "actions": [
-            {{"function": "return_answer", "query": ""}}
+            {{"function": "return_answer"}}
         ]
     }}
 }}
@@ -141,7 +141,7 @@ User Question: "Who is the author of the paper 'Attention Is All You Need' and w
     "step_3": {{
         "description": "Compile the retrieved information into a final answer.",
         "actions": [
-            {{"function": "return_answer", "query": ""}}
+            {{"function": "return_answer"}}
         ]
     }}
 }}
@@ -154,12 +154,8 @@ User Question: "What is your favorite flavor of ice cream?"
 {{
     "step_1": {{
         "description": "No external information is required to answer this question.",
-        "actions": []
-    }},
-    "step_2": {{
-        "description": "Provide a response based on AI's programming.",
         "actions": [
-            {{"function": "return_answer", "query": ""}}
+            {{"function": "return_answer"}}
         ]
     }}
 }}
@@ -189,7 +185,7 @@ User Question: "What is a widely recognized cancer mutation gene, and who are th
     "step_3": {{
         "description": "Compile the retrieved information into a final answer.",
         "actions": [
-            {{"function": "return_answer", "query": ""}}
+            {{"function": "return_answer"}}
         ]
     }}
 }}
@@ -213,7 +209,7 @@ User Question: "Who is Reed Bender and what has he written on Medium?"
     "step_2": {{
         "description": "Compile the retrieved information into a final answer.",
         "actions": [
-            {{"function": "return_answer", "query": ""}}
+            {{"function": "return_answer"}}
         ]
     }}
 }}

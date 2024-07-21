@@ -20,7 +20,7 @@ class Toolkit:
         self.MyAgent = MyAgent
         self.tools_json = f"{self.MyAgent.home}src/agent/tools.json"
         # self.function_planning_model = "gpt-4o-mini-2024-07-18"
-        self.n_function_responses = 3   ### PASSED TO EACH FUNCTION CALL AS A STATIC OBJECT
+        self.n_function_responses = 3   ### FOR EACH INDIVIDUAL TOOL CALL
         self.n_available_tools = 6   ### N AVAILABLE TOOLS FOR EACH AGENT CALL
 
         ### DEFINE THE TOOLSET VECTOR DATABASE IN MEMORY
@@ -37,8 +37,10 @@ class Toolkit:
         tools = self.read_tools()
         definitions = []
         for tool in tools:
-            ### ONLY INCLUDE SERPAPI FUNCTIONS IF API KEY IS PROVIDED
+            ### ONLY INCLUDE SERPAPI / PUBMED FUNCTIONS IF AUTH IS PROVIDED
             if tool["type"] == "serpapi" and 'SERPAPI_API_KEY' not in os.environ:
+                continue
+            elif tool["type"] == "pubmed" and 'PUBMED_API_KEY' not in os.environ:
                 continue
             else:
                 definitions.append(tool["function"])

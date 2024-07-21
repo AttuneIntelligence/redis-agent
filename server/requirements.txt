@@ -43,3 +43,4 @@ rq==1.16.2
 pypatent==1.2.0
 # rq-dashboard==0.7.1.2
 chromadb==0.5.4
+wikipedia==1.4.0

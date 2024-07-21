@@ -18,8 +18,7 @@ class Agent_Queue:
         self.redis_connection = redis.Redis(host=MyAgent.redis_host, port=MyAgent.redis_port)
         self.relevance_embedding_model = 'text-embedding-3-small'
         self.relevance_embedding_dimensions = 512
-        self.n_relevant_results = 4
-        self.relevance_threshold = 0.25
+        self.relevance_threshold = 0.3   ### EXCLUDE ABERANT FUNCTION RESULTS
 
     ### WRAP QUEUE AND FETCH INTO SINGLE FUNCTION
     def queue_function_calls(self,
@@ -40,7 +39,6 @@ class Agent_Queue:
         q = Queue(connection=self.redis_connection)
         job_ids = []
         for function_call in query_list:
-            function_call['n_results'] = self.MyAgent.Toolkit.n_function_responses   ### PASS CLASS LIMIT TO STATIC METHODS
             job = q.enqueue(self.MyAgent.Toolkit.execute_function_call, function_call, self.MyAgent.Toolkit.all_tools)
             job_ids.append(job.id)
         return job_ids
@@ -58,18 +56,26 @@ class Agent_Queue:
                 results.extend(job.result)
             
         ### ENSURE UNIQUE RESULTS
+        unique_results = self.filter_unique_results(results)
+        return unique_results
+
+    def filter_unique_results(self,
+                              function_results):
         seen_titles = set()
         def add_unique_result(result):
             if not result:
                 return False
-            title = result.get('title', None)
+            try:
+                title = result.get('title', None)
+            except Exception as e:
+                print(f"!Error with unique queue results ({result}): {e}")
+                raise ValueError('BAD')   ### CLEAN HERE
             if not title:
                 title = result.get('name', None)
             if title and title not in seen_titles:
                 seen_titles.add(title)
                 return True
-            return False
-        unique_results = [result for result in results if add_unique_result(result)]
+        unique_results = [result for result in function_results if add_unique_result(result)]
         return unique_results
 
     ### SORT QUEUE RESPONSES BY RELEVANCE
@@ -78,8 +84,8 @@ class Agent_Queue:
                                   results,
                                   n_results=None):
         timer = Timer()
-        if not n_results:
-            n_results=self.n_relevant_results
+        if not n_results:   ### ALLOW OVERWRITE OR SET TO AGENT PARAM
+            n_results=self.MyAgent.n_final_agent_results
         
         ### COMPUTE COSINE SIMILARITY
         def compute_similarity(result, encoded_question):

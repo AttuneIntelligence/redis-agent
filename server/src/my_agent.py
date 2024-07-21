@@ -23,7 +23,8 @@ class MyAgent:
         self.redis_port = 6379
 
         ### AGENTIAL Q&A
-        self.n_agent_actions = 3
+        self.n_agent_actions = 2   ### AGENT ITERATION LIMIT
+        self.n_final_agent_results = 8   ### LENGTH OF FINAL FUNCTION RESULTS
 
         ### CLASS IMPORTS
         self.OpenAI = OpenAI(self)
@@ -93,15 +94,18 @@ class MyAgent:
             question=question, 
             selected_tools=selected_tools
         )
+        total_cost += planning_metadata['cost']
          
         #########################################################
         ### 2 --> EXECUTE STEP 1 OF THE PLAN IN REDIS WORKERS ###
         #########################################################
+        n_function_calls = 0
         complete_function_responses = []
         step_01_actions = generated_plan['step_1']['actions']
-        if step_01_actions:
+        if step_01_actions[0]["function"] != "return_answer":
             ### RESPONSE FUNCTION CALLS --> REDIS QUEUE CALLS
             function_queue = self.compile_agent_functions(step_01_actions)
+            functions_called.extend(step_01_actions)
                     
             ### QUEUE FUNCTIONS TO REDIS WORKERS
             function_execution_response = self.Agent_Queue.queue_function_calls(function_queue)
@@ -111,6 +115,7 @@ class MyAgent:
                 question=question,
                 results=function_execution_response
             )
+            n_function_calls += 1
 
         else:
             ### NO ACTION WAS NECESSARY
@@ -120,7 +125,6 @@ class MyAgent:
         ##################################################################
         ### 3 --> ENTER ITERATION LOOP FOR SUBSEQUENT CHAIN OF THOUGHT ###
         ##################################################################
-        n_function_calls = 1   ### ALREADY EXECUTED STEP 1
         while n_function_calls < self.n_agent_actions:
             if not step_01_actions:
                 ### BYPASS AGENT LOOP IF NO ACTIONS TO TAKE
@@ -135,6 +139,8 @@ class MyAgent:
                     current_step=n_function_calls+1
                 )
                 function_iteration_actions = function_iteration_results['actions']
+                functions_called.extend(function_iteration_actions)
+                total_cost += loop_iteration_metadata['cost']
     
                 ### BREAK AGENT LOOP IF STOP SEQUENCE IS RETURNED
                 if function_iteration_actions[0]["function"] == "return_answer":
@@ -154,8 +160,20 @@ class MyAgent:
                 complete_function_responses.extend(relevant_function_results)
                 n_function_calls += 1
 
-        # print(f"==> Agent Execution completed in {n_function_calls} steps.")
-        return complete_function_responses
+        ### END OF FUNCTION CALLING LOOP --> FILTER UNIQUE AND RETURN MAXIMALLY RELEVANT FROM AGGREGATED SOURCES
+        unique_results = self.Agent_Queue.filter_unique_results(complete_function_responses)
+        best_function_responses = sorted(unique_results, key=lambda x: x['similarity'], reverse=True)[:self.n_final_agent_results]
+
+        ### COMPILE METADATA AND RETURN
+        time_taken = timer.get_elapsed_time()
+        agent_metadata = {
+            'time': time_taken,
+            'cost': total_cost,
+            'n_steps': n_function_calls,
+            'functions_executed': functions_called
+        }
+        print(f"==> Agent executed in {n_function_calls} steps for ${round(total_cost, 3)} ({time_taken} seconds).")
+        return best_function_responses, agent_metadata
 
     def agential_loop_execution(self,
                                 question,
@@ -184,7 +202,6 @@ class MyAgent:
           response_format={ "type": "json_object" }
         )
         iterated_function_call = iterated_function_response.choices[0].message.content
-        print(json.loads(iterated_function_call))
         funtion_iteration_cost = self.OpenAI.cost_calculator(
             ingress=agent_iteration_messages,
             egress=iterated_function_call,
@@ -210,7 +227,8 @@ class MyAgent:
                 function_queue.append({
                     'name': function_call['function'],
                     'arguments': {
-                        'query': function_call['query']
+                        'query': function_call['query'],
+                        'n_results': self.Toolkit.n_function_responses   ### N RETURNED BY EACH FUNCTION
                     }
                 })
             except:
