@@ -19,7 +19,6 @@ class Toolkit:
                  MyAgent):
         self.MyAgent = MyAgent
         self.tools_json = f"{self.MyAgent.home}src/agent/tools.json"
-        # self.function_planning_model = "gpt-4o-mini-2024-07-18"
         self.n_function_responses = 3   ### FOR EACH INDIVIDUAL TOOL CALL
         self.n_available_tools = 6   ### N AVAILABLE TOOLS FOR EACH AGENT CALL
 
