@@ -25,12 +25,13 @@ def search_clinical_trials(query,
                 'title': title,
                 'description': description,
                 'link': url,
-                'source': 'Clinical Trials'
+                'source': 'Clinical Trials',
+                'reference_link': f":clipboard: [{title}]({url})"
             })
         if result:
             return result
         else:
             return "NA"
     else:
-        print(f"Search for clinical trials with the search '{query}' returned with a failure.")
+        # print(f"Search for clinical trials with the search '{query}' returned with a failure.")
         return "NA"

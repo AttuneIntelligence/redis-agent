@@ -161,7 +161,7 @@
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "the name of a research or academic scientist"
+                        "description": "the name of a research or academic scientist. You must ONLY provide the name, and no adjunct text, to this query input."
                     }
                 },
                 "required": [

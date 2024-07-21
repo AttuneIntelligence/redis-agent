@@ -1,6 +1,7 @@
 import sys
 import json
 import multiprocess
+from termcolor import colored
 
 sys.path.append('/workspace/redis-agent')
 from src import *
@@ -25,6 +26,8 @@ class MyAgent:
         ### AGENTIAL Q&A
         self.n_agent_actions = 2   ### AGENT ITERATION LIMIT
         self.n_final_agent_results = 8   ### LENGTH OF FINAL FUNCTION RESULTS
+        self.agent_temperature = 0.4
+        self.persona_temperature = 0.9
 
         ### CLASS IMPORTS
         self.OpenAI = OpenAI(self)
@@ -32,6 +35,37 @@ class MyAgent:
         self.Agent_Queue = Agent_Queue(self)
         self.Toolkit = Toolkit(self)
         
+    #####################
+    ### AGENT WRAPPER ###
+    #####################
+    def execute(self,
+                user_json):
+        timer = Timer()
+
+        ### GET CHAT HISTORY HERE ###
+        
+        ### EXECUTE AGENT
+        agent_results, agent_metadata = self.invoke_gpt_agent(user_json['question'])
+
+        ### STREAM RESPONSE WITH PERSONA
+        final_response_messages, persona_metadata = self.agent_persona_generation(
+            user_json=user_json,
+            chat_history=[],
+            function_response=agent_results,
+        )
+
+        ### COMPILE METADATA
+        time_taken = timer.get_elapsed_time()
+        execution_metadata = {
+            'time': time_taken,
+            'cost': agent_metadata['cost'] + persona_metadata['cost'],
+            'time_to_first_token': persona_metadata['time_to_first_token'] + agent_metadata['time'],
+            'tokens_per_second': persona_metadata['egress_tokens'] / time_taken,
+            'n_agent_steps': agent_metadata['n_agent_steps'],
+            'functions_executed': agent_metadata['functions_executed']
+        }
+        return final_response_messages, execution_metadata
+
     ##################################################
     ### CHAIN OF THOUGHT REASONING FOR PREPLANNING ###
     ##################################################
@@ -49,9 +83,10 @@ class MyAgent:
         )
         CoT_messages = [{"role": "system", "content": CoT_prompt}, {"role": "user", "content": question}]
         structured_plan_response = self.OpenAI.client.chat.completions.create(
-          model=self.OpenAI.primary_model,
-          messages=CoT_messages,
-          response_format={ "type": "json_object" }
+            model=self.OpenAI.primary_model,
+            messages=CoT_messages,
+            response_format={ "type": "json_object" },
+            temperature=self.agent_temperature
         )
         structured_plan = structured_plan_response.choices[0].message.content
         planning_cost = self.OpenAI.cost_calculator(
@@ -169,7 +204,7 @@ class MyAgent:
         agent_metadata = {
             'time': time_taken,
             'cost': total_cost,
-            'n_steps': n_function_calls,
+            'n_agent_steps': n_function_calls,
             'functions_executed': functions_called
         }
         print(f"==> Agent executed in {n_function_calls} steps for ${round(total_cost, 3)} ({time_taken} seconds).")
@@ -197,9 +232,10 @@ class MyAgent:
             {"role": "user", "content": f"Function Results: {json.dumps(function_results)}"}
         ]
         iterated_function_response = self.OpenAI.client.chat.completions.create(
-          model=self.OpenAI.primary_model,
-          messages=agent_iteration_messages,
-          response_format={ "type": "json_object" }
+            model=self.OpenAI.primary_model,
+            messages=agent_iteration_messages,
+            response_format={ "type": "json_object" },
+            temperature=self.agent_temperature
         )
         iterated_function_call = iterated_function_response.choices[0].message.content
         funtion_iteration_cost = self.OpenAI.cost_calculator(
@@ -235,7 +271,83 @@ class MyAgent:
                 print(f"==> [Error] Invalid json returned by agent: {function_call}")
                 continue
         return function_queue
+        
+    #######################################
+    ### PERSONA GENERATION W/ STREAMING ###
+    #######################################
+    def agent_persona_generation(self,
+                                 chat_history,
+                                 function_response,
+                                 user_json,
+                                 flask_execution=False):
+        timer = Timer()
+        all_messages = []
+    
+        ### ADD INDRA'S PERSONA TEMPLATE
+        generation_prompt_template = self.Utilities.read_prompt_template(template_name="agential_persona_template")
+        generation_prompt = generation_prompt_template.format(
+            ai_name=self.ai_name,
+            human_name=user_json.get('display_name', 'user')
+        )
+        all_messages.append({"role": "system", "content": generation_prompt})
 
+        ### ADD CHAT HISTORY
+        all_messages.extend(chat_history)
+
+        ### ADD COMPILED REFERENCE MATERIAL
+        all_messages.append({"role": "user", "content": f"Compiled Reference Material: {json.dumps({'function_data': function_response})}"})
+    
+        ### ADD QUESTION
+        input_message = {"role": "user", "content": user_json.get("question")}
+        all_messages.append(input_message)
+    
+        ### STREAM COMPLETION RESPONSE
+        response_stream = self.OpenAI.client.chat.completions.create(
+            messages=all_messages,
+            model=self.OpenAI.primary_model,
+            temperature=self.persona_temperature,
+            stream=True
+        )
+        if self.verbose:
+            print(colored(f"{self.ai_name}:", 'blue'))
+
+        ### RETURN TO JUPYTER CONSOLE
+        text_response = ''
+        first_response = True
+        for chunk in response_stream:
+            if first_response:
+                time_to_first_token = timer.get_elapsed_time()
+                first_response=False
+            if chunk.choices[0].delta.content is not None:
+                text_response += chunk.choices[0].delta.content
+                if self.verbose:
+                    print(colored(chunk.choices[0].delta.content, 'blue'), end="")
+        if self.verbose:
+            print("\n")
+        response_messages = self.Utilities.create_response_thread(
+            messages=all_messages,
+            text_response=text_response,
+            verbose=False
+        )
+
+        ### PROCESS RESPONSE
+        inference_cost, egress_tokens = self.OpenAI.cost_calculator(
+            ingress=all_messages,
+            egress=text_response,
+            model=self.OpenAI.primary_model,
+            return_egress_tokens=True
+        )
+        time_elapsed = timer.get_elapsed_time()
+
+        ### COMPILE METADATA
+        metadata = {
+            "cost": inference_cost,
+            "time": time_elapsed,
+            "time_to_first_token": round(time_to_first_token, 3),
+            "egress_tokens": egress_tokens,
+        }
+        print(f"==> Persona response generated in {time_elapsed} seconds.")
+        return response_messages, metadata
 
 
 

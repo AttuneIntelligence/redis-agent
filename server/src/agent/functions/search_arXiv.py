@@ -40,7 +40,8 @@ def search_arXiv(query,
                 "publication_date": publication_date,
                 "authors": authors,
                 "link": str(pdf_link),
-                "source": "arXiv"
+                "source": "arXiv",
+                "reference_link": f":notebook: [{r.title}]({str(pdf_link)})"
             }
             all_arxiv_results.append(arxiv_json)
 
