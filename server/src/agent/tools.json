@@ -1,6 +1,6 @@
 [
     {
-        "type": "function",
+        "type": "pubmed",
         "function": {
             "name": "search_pubmed",
             "description": "Search peer-reviewed clinical and biomedical research literature from Pubmed.",
@@ -79,7 +79,7 @@
         "type": "serpapi",
         "function": {
             "name": "search_internet",
-            "description": "Search the internet for diverse content and resource URLs.",
+            "description": "Search the internet for diverse content and resource URLs. Avoid use unless necessary.",
             "parameters": {
                 "type": "object",
                 "properties": {

@@ -6,12 +6,12 @@ def search_arXiv(query,
     client = arxiv.Client()
     search = arxiv.Search(
       query = query,
-      max_results = 9,
+      max_results = n_results,
       sort_by = arxiv.SortCriterion.SubmittedDate
     )
     results = client.results(search)
     if not results:
-        return None
+        return "NA"
     
     ### COMPILE TO JSON
     all_arxiv_results = []
@@ -39,7 +39,8 @@ def search_arXiv(query,
                 "description": str(r.summary).replace("\n", " "),
                 "publication_date": publication_date,
                 "authors": authors,
-                "link": str(pdf_link)
+                "link": str(pdf_link),
+                "source": "arXiv"
             }
             all_arxiv_results.append(arxiv_json)
 

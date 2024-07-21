@@ -36,7 +36,7 @@ def search_internet(query,
                 final_results.append(response)
         return final_results
     except:
-        return None
+        return "NA"
 
 ### DEFINE SEARCH OF SPECIFIC WEBSITES ###
 ##########################################
@@ -69,12 +69,13 @@ def search_us_patent_office(query, n_results=3):
                     'description': i.get('snippet', ''),
                     'patent_number': i.get('publication_number', ''),
                     'inventor': i.get('inventor', ''),
-                    'date_filed': i.get('filing_date', '')
+                    'date_filed': i.get('filing_date', ''),
+                    'source': 'US Patent Office'
                 }
                 final_results.append(response)
         return final_results
     except:
-        return None
+        return "NA"
 
 ### SEARCH GOOGLE SCHOLAR
 def search_academic_scholars(query, n_results=3):
@@ -92,7 +93,7 @@ def search_academic_scholars(query, n_results=3):
     try:
         data = []
         if not results.get('profiles', {}).get('authors'):
-            return None
+            return "NA"
         else:
             for i in results['profiles']['authors'][:n_results]:
                 response = {
@@ -101,11 +102,12 @@ def search_academic_scholars(query, n_results=3):
                     'n_cited_by': i.get('cited_by', ''),
                     'url': i.get('link', ''),
                     'scholar_id': i.get('author_id', ''),
+                    'source': 'Google Scholar' 
                 }
                 data.append(response)
         return data
     except Exception as e:
         print(f"Error! {e}")
-        return None
+        return "NA"
 
 

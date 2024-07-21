@@ -1,6 +1,7 @@
 from pymed import PubMed
 import json
 import re
+import os
 
 def clean_text(input_text):
     cleaned_text = input_text.encode('ascii', 'ignore').decode()
@@ -11,7 +12,12 @@ def clean_text(input_text):
 
 def search_pubmed(query,
                   n_results=3):
-    pubmed = PubMed(tool="Redis-Agent", email="user@redisagent.com")
+    ### SETUP PUBMED
+    pubmed = PubMed(tool="Redis-Agent", email="reedbndr@gmail.com")
+    pubmed.parameters.update({'api_key': os.getenv("PUBMED_API_KEY")})
+    pubmed._rateLimit = 50
+
+    ### API QUERY
     results = pubmed.query(query, max_results=n_results)
 
     ### COMPILE RESULTS
@@ -30,10 +36,10 @@ def search_pubmed(query,
         except:
             doi = None
         title = clean_text(article.title)
-        keywords = ""
-        if article.keywords:
-            keywords_list = [kw for kw in article.keywords if kw]
-            keywords = '", "'.join(keywords_list)
+        # keywords = ""   ### IGNORING KEYWORDS FOR NOW
+        # if article.keywords:
+        #     keywords_list = [kw for kw in article.keywords if kw]
+        #     keywords = '", "'.join(keywords_list)
         publication_date = article.publication_date
         try:
             abstract = clean_text(article.abstract)
@@ -45,14 +51,14 @@ def search_pubmed(query,
         paper_result = {
             "title": title,
             "authors": authors,
-            "keywords": keywords,
             "publication_date": str(publication_date),
             "description": abstract,
-            "link": doi
+            "link": doi,
+            "source": "Pubmed"
         }
         pubmed_results.append(paper_result)
 
     if pubmed_results:
         return pubmed_results
     else:
-        return None
+        return "NA"

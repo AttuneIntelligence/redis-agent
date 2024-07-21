@@ -10,4 +10,5 @@ def set_keys(MyAgent):
 
     ### SET KEYS
     MyAgent.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    MyAgent.SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY")   ### NOTE THAT THIS IS IMPORTED DIRECTLY TO STATIC METHODS
+    MyAgent.PUBMED_API_KEY = os.getenv("PUBMED_API_KEY")
+    MyAgent.SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY")

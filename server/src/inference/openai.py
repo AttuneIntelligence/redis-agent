@@ -18,10 +18,10 @@ class OpenAI:
         self.MyAgent = MyAgent
         
         ### MODEL SELECTION
-        # self.primary_model = "gpt-4o-2024-05-13"
-        self.primary_model = "gpt-4-turbo-2024-04-09"
+        self.primary_model = "gpt-4o-2024-05-13"
+        # self.primary_model = "gpt-4-turbo-2024-04-09"
         # self.secondary_model = "gpt-4o-2024-05-13"
-        self.secondary_model = "gpt-3.5-turbo-1106"
+        self.secondary_model = "gpt-4o-mini-2024-07-18"   ### !!! TOWARDS INTELLIGENCE TOO CHEAP TO METER !!!
 
         ### CLASS IMPORTS
         self.client = Open_AI()
@@ -196,6 +196,10 @@ class OpenAI:
             prompt_cost = (egress_tokens / 1000)*0.0015
             response_cost = (egress_tokens / 1000)*0.0020
 
+        elif model in ["gpt-4o-mini", "gpt-4o-mini-2024-07-18"]:
+            prompt_cost = (ingress_tokens / 1000000)*0.150
+            response_cost = (egress_tokens / 1000000)*0.600
+        
         if not return_egress_tokens:
             return prompt_cost+response_cost     
         else:
