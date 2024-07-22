@@ -42,14 +42,12 @@ if [ -n "$CONTAINER_ID" ]; then
   CONTAINER_STATE=$(docker inspect -f '{{.State.Running}}' $CONTAINER_ID)
   if [ "$CONTAINER_STATE" = "true" ]; then
     echo "Container is already running. Connecting to it..."
-    if [ "$1" == "--server" ]; then
-      docker exec -it $CONTAINER_ID bash -c "python main.py"
-    elif [ "$1" == "--jupyter" ]; then
+    if [ "$1" == "--jupyter" ]; then
       docker exec -it $CONTAINER_ID bash -c "source bin/jupyter.sh"
     elif [ "$1" == "--bash" ]; then
       docker exec -it $CONTAINER_ID bash -c "cowsay namaste; bash"
     else
-      echo "No instruction provided for server."
+      docker exec -it $CONTAINER_ID bash -c "python main.py"
     fi
   else
     echo "Removing stopped redis-agent-server container..."

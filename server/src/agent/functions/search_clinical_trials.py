@@ -26,7 +26,7 @@ def search_clinical_trials(query,
                 'description': description,
                 'link': url,
                 'source': 'Clinical Trials',
-                'reference_link': f":clipboard: [{title}]({url})"
+                'reference_link': f"&#128203; [{title}]({url})"
             })
         if result:
             return result

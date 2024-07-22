@@ -39,7 +39,7 @@ def search_internet(query,
                     if emoji:
                         link_ref = f"{emoji} [{title}]({url})"
                     else:
-                        link_ref = f":globe_with_meridians: [{title}]({url})"
+                        link_ref = f"&#127760; [{title}]({url})"
                 else:
                     link_ref = title
                     
@@ -60,7 +60,7 @@ def search_internet(query,
 def search_neurips(query, n_results=3):
     return search_internet(query, site="proceedings.neurips.cc")
     
-def search_github(query, n_results=3, emoji=':octocat:'):
+def search_github(query, n_results=3, emoji='&#128008;'):
     github_query = f"{query} repository"
     return search_internet(query, site="github.com", emoji=emoji)
 
@@ -88,7 +88,7 @@ def search_us_patent_office(query, n_results=3):
                 ### DEFINE LINK
                 url = i.get('pdf', None)
                 if url:
-                    link_ref = f":page_with_curl: [{title}]({url})"
+                    link_ref = f"&#128197; [{title}]({url})"
                 else:
                     link_ref = title
                     

@@ -57,7 +57,7 @@ def search_pubmed(query,
             "description": abstract,
             "link": doi,
             "source": "Pubmed",
-            "reference_link": f":blue_book: [{title}]({doi})",
+            "reference_link": f"&#128214; [{title}]({doi})",
         }
         pubmed_results.append(paper_result)
 

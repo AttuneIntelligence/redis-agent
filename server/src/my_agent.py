@@ -42,8 +42,8 @@ class MyAgent:
     #####################
     ### AGENT WRAPPER ###
     #####################
-    def execute(self,
-                user_json):
+    def server_execute(self,
+                       user_json):
         timer = Timer()
 
         ### PULL CHAT HISTORY FROM REDIS
@@ -55,7 +55,38 @@ class MyAgent:
         agent_results, agent_metadata = self.invoke_gpt_agent(chat_thread)
 
         ### STREAM RESPONSE WITH PERSONA
-        final_response_messages, persona_metadata = self.agent_persona_generation(
+        text_response = ""
+        for chunk in self.server_persona_generation(
+            user_json=user_json,
+            chat_history=chat_thread,
+            function_response=agent_results
+        ):
+            text_response += chunk
+            yield chunk
+
+        ### ADD CHAT HISTORY TO REDIS AFTER RESPONSE HAS BEEN STREAMED
+        self.Memory.ingress_memory( 
+            user_id=user_json['user_id'],
+            message_thread=chat_thread,
+            question=user_json['question'], 
+            response=text_response
+        )
+
+    ### EXECUTE AGENT IN JUPYTER NOTEBOOK WITH METADATA COMILATION
+    def notebook_execute(self,
+                         user_json):
+        timer = Timer()
+
+        ### PULL CHAT HISTORY FROM REDIS
+        chat_thread = self.Memory.egress_memory(user_json['user_id'])['chat_history']
+        
+        ### EXECUTE AGENT
+        print(f"==> Executing agent...")
+        chat_thread.append({'role': 'user', 'content': user_json['question']})
+        agent_results, agent_metadata = self.invoke_gpt_agent(chat_thread)
+
+        ### STREAM RESPONSE WITH PERSONA
+        final_response, persona_metadata = self.notebook_persona_generation(
             user_json=user_json,
             chat_history=chat_thread,
             function_response=agent_results,
@@ -66,10 +97,10 @@ class MyAgent:
             user_id=user_json['user_id'],
             message_thread=chat_thread,
             question=user_json['question'], 
-            response=final_response_messages[-1]['content']
+            response=final_response
         )
 
-        ### COMPILE METADATA
+        ### COMPILE FINAL AGENT METADATA
         time_taken = timer.get_elapsed_time()
         execution_metadata = {
             'time': time_taken,
@@ -79,7 +110,7 @@ class MyAgent:
             'n_agent_steps': agent_metadata['n_agent_steps'],
             'functions_executed': agent_metadata['functions_executed']
         }
-        return final_response_messages, execution_metadata
+        return final_response, execution_metadata
 
     ##################################################
     ### CHAIN OF THOUGHT REASONING FOR PREPLANNING ###
@@ -292,37 +323,23 @@ class MyAgent:
     #######################################
     ### PERSONA GENERATION W/ STREAMING ###
     #######################################
-    def agent_persona_generation(self,
-                                 chat_history,
-                                 function_response,
-                                 user_json,
-                                 flask_execution=False):
+    ### DIRECT RETURN OF STREAMED RESPONSE, NO SERVER
+    def notebook_persona_generation(self,
+                                    chat_history,
+                                    function_response,
+                                    user_json):
         timer = Timer()
-        all_messages = []
-    
-        ### ADD INDRA'S PERSONA TEMPLATE
-        generation_prompt_template = self.Utilities.read_prompt_template(template_name="agential_persona_template")
-        generation_prompt = generation_prompt_template.format(
-            ai_name=self.ai_name,
-            human_name=user_json.get('display_name', 'user')
+        
+        ### GENERATE AGENT MESSAGE THREAD
+        agent_messages = self.format_agent_message_thread(         
+            chat_history=chat_history,
+            function_response=function_response,
+            user_json=user_json
         )
-        all_messages.append({"role": "system", "content": generation_prompt})
-
-        ### ADD CHAT HISTORY
-        all_messages.extend(chat_history[:-1])   ### REMOVE QUESTION, REFERENCES COME FIRST FOR RELEVANCE ORDERING
-
-        ### ADD COMPILED REFERENCE MATERIAL
-        all_messages.append({"role": "user", "content": f"Compiled Reference Material: {json.dumps({'function_data': function_response})}"})
-    
-        ### THEN ADD QUESTION AS THE LAST MESSAGE
-        input_message = {"role": "user", "content": user_json.get("question")}
-        all_messages.append(input_message)
-        if self.verbose:
-            self.Utilities.pretty_print(all_messages)
                 
         ### STREAM COMPLETION RESPONSE
         response_stream = self.OpenAI.client.chat.completions.create(
-            messages=all_messages,
+            messages=agent_messages,
             model=self.OpenAI.primary_model,
             temperature=self.persona_temperature,
             stream=True
@@ -343,20 +360,96 @@ class MyAgent:
                     print(colored(chunk.choices[0].delta.content, 'blue'), end="")
         if self.verbose:
             print("\n")
-        response_messages = self.Utilities.create_response_thread(
-            messages=all_messages,
-            text_response=text_response,
-            verbose=False
-        )
 
+        ### COMPILE AGENT METADATA RESPONSE
+        time_taken = timer.get_elapsed_time()
+        persona_metadata = self.compile_agent_response_metadata(
+            agent_messages=agent_messages,
+            agent_response=text_response,
+            time_elapsed=time_taken,
+            time_to_first_token=time_to_first_token
+        )
+        return text_response, persona_metadata
+
+    ### FLASK PERSONA GENERATION WITH STREAMING TO SERVER
+    def server_persona_generation(self,
+                                  chat_history,
+                                  function_response,
+                                  user_json):
+        timer = Timer()
+        
+        ### GENERATE AGENT MESSAGE THREAD
+        agent_messages = self.format_agent_message_thread(         
+            chat_history=chat_history,
+            function_response=function_response,
+            user_json=user_json
+        )
+                
+        ### STREAM COMPLETION RESPONSE
+        response_stream = self.OpenAI.client.chat.completions.create(
+            messages=agent_messages,
+            model=self.OpenAI.primary_model,
+            temperature=self.persona_temperature,
+            stream=True
+        )
+        if self.verbose:
+            print(colored(f"{self.ai_name}:", 'blue'))
+
+        text_response = ''
+        first_response = True
+        time_to_first_token = 0
+        for chunk in response_stream:
+            if first_response:
+                time_to_first_token = timer.get_elapsed_time()
+                first_response = False
+            if chunk.choices[0].delta.content is not None:
+                text_response += chunk.choices[0].delta.content
+                if self.verbose:
+                    print(colored(chunk.choices[0].delta.content, 'blue'), end="")
+                yield chunk.choices[0].delta.content
+        if self.verbose:
+            print("\n")
+        yield "[DONE]"
+
+    def format_agent_message_thread(self,         
+                                    chat_history,
+                                    function_response,
+                                    user_json):
+        all_messages = []
+    
+        ### ADD INDRA'S PERSONA TEMPLATE
+        generation_prompt_template = self.Utilities.read_prompt_template(template_name="agential_persona_template")
+        generation_prompt = generation_prompt_template.format(
+            ai_name=self.ai_name,
+            human_name=user_json.get('display_name', 'user')
+        )
+        all_messages.append({"role": "system", "content": generation_prompt})
+
+        ### ADD CHAT HISTORY
+        all_messages.extend(chat_history[:-1])   ### REMOVE QUESTION, REFERENCES COME FIRST FOR RELEVANCE ORDERING
+
+        ### ADD COMPILED REFERENCE MATERIAL
+        all_messages.append({"role": "user", "content": f"Compiled Reference Material: {json.dumps({'function_data': function_response})}"})
+    
+        ### THEN ADD QUESTION AS THE LAST MESSAGE
+        input_message = {"role": "user", "content": user_json.get("question")}
+        all_messages.append(input_message)
+        if self.verbose:
+            self.Utilities.pretty_print(all_messages)  
+        return all_messages
+
+    def compile_agent_response_metadata(self,
+                                        agent_messages,
+                                        agent_response,
+                                        time_elapsed,
+                                        time_to_first_token):
         ### PROCESS RESPONSE
         inference_cost, egress_tokens = self.OpenAI.cost_calculator(
-            ingress=all_messages,
-            egress=text_response,
+            ingress=agent_messages,
+            egress=agent_response,
             model=self.OpenAI.primary_model,
             return_egress_tokens=True
         )
-        time_elapsed = timer.get_elapsed_time()
 
         ### COMPILE METADATA
         metadata = {
@@ -366,7 +459,6 @@ class MyAgent:
             "egress_tokens": egress_tokens,
         }
         print(f"==> Persona response generated for ${round(inference_cost, 4)} ({time_elapsed} seconds).")
-        return response_messages, metadata
-
+        return metadata
 
 
