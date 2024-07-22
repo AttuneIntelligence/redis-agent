@@ -46,7 +46,7 @@ Created and maintained by _[Reed Bender](https://github.com/mrbende)_.
 2. _**[Pubmed Key](https://account.ncbi.nlm.nih.gov/settings/)**_ (*optional*)
     - This key connects to Pubmed, connecting the agent to published biomedical literature.
 
-Once each of these keys has been acquired, the installation and deployment can be executed with API authentification.
+Once each of these keys has been acquired (or only the OpenAI key to launch with a subset of available functions), the installation and deployment can be executed.
 
 Create a `.env` file at `server/.env` to provide authentification to the locally deployed application.
 
@@ -66,9 +66,8 @@ PUBMED_API_KEY=""
 ```bash
 ### START
 docker-compose up --build
-
-### STOP
-docker-compose down
 ```
+
+The application will then be made accessible at _[http://localhost:3000](http://localhost:3000)_.
 
 ---
