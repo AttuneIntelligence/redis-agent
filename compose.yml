@@ -1,11 +1,15 @@
 version: '3'
 services:
+  ### REDIS CONTAINER FOR AGENT QUEUE AND CHAT HISTORY
   redis:
     image: redis:4.0.6-alpine
     ports:
       - "6379:6379"
     container_name: redis
+    networks:
+      - redis-network
 
+  ### REDIS AGENT SERVER IMAGE
   server:
     image: ghcr.io/attuneintelligence/redis-agent-server:main
     build:
@@ -17,13 +21,36 @@ services:
       - "8888:8888"
       - "5001:5000"
     container_name: server
+    networks:
+      - redis-network
 
+  ### REDIS AGENT SERVER, LAUNCHED AS WORKER NODE FOR AGENT QUEUE
   worker:
     image: ghcr.io/attuneintelligence/redis-agent-server:main
+    build:
+      context: server
+      dockerfile: server.Dockerfile
     depends_on:
       - redis
       - server
-    command: rq worker --url redis://redis:6379
+    command: python ./bin/redis_worker.py
     links:
       - redis
     container_name: worker
+    networks:
+      - redis-network
+
+  ### NEXTJS CLIENT UI
+  client:
+    image: ghcr.io/attuneintelligence/redis-agent-client:main
+    build:
+      context: client
+      dockerfile: client.Dockerfile
+    ports:
+      - "3000:3000"
+    container_name: client
+
+### DOCKER NETWORK FOR LINKING REDIS TO SERVER
+networks:
+  redis-network:
+    driver: bridge
