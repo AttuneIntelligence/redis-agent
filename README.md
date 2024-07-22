@@ -21,15 +21,48 @@
     <br>
 </div>
 
-Designing cognitive architectures capable of agency is a notoriously difficult task. Base language models are confined to the knowledge of their training, and retrieval-augmented generation (RAG) pipelines generally follow a rigid pipeline with predefined source knowledge.
+Designing cognitive architectures capable of agency is a notoriously difficult task. Base language models are confined to the knowledge of their training, and retrieval-augmented generation (RAG) pipelines generally follow a rigid pipeline for execution.
 
-`Redis-Agent` leverages Chain-of-Thought reasoning to generate a plan for responding to complex questions, and then offloads the task of function calling to a queue of Redis workers.
+`Redis-Agent` leverages Chain-of-Thought reasoning to generate a plan of action for complex questions, and then offloads the task of function calling to a queue of Redis workers for concurrent execution.
+
+Created and maintained by _[Reed Bender](https://github.com/mrbende)_.
 
 <div align="center">
   <img src="assets/RedisAgentSchema.png" alt="Redis Agent Schema" />
 </div>
 
 ---
+
+## Getting Started
+
+### Step 1: Install Docker
+  Install [Docker](https://docs.docker.com/get-docker/) on your machine if it is not already installed.
+
+### Step 2: Compile API Keys
+  1. _**[OpenAI Key](https://platform.openai.com/api-keys)**_ 
+      - OpenAI 
+  2. _**[SerpAPI Key](https://serpapi.com/dashboard)**_ (*optional*)
+      - This key connects to SerpAPI, which enables web search function calling.
+  2. _**[Pubmed Key](https://account.ncbi.nlm.nih.gov/settings/)**_ (*optional*)
+      - This key connects to Pubmed, connecting the agent to published biomedical literature.
+
+  Once each of these keys has been acquired, the installation and deployment can be executed with API authentification.
+
+  Create a `.env` file **inside** of the `server` directory to provide authentification to the locally deployed `Redis-Agent` application.
+
+    ```bash
+    ### server/.env
+    OPENAI_API_KEY=""
+
+    ### SERPAPI AUTH   (optional)
+    SERPAPI_API_KEY=""
+
+    ### PUBMED API AUTH   (optional)
+    PUBMED_EMAIL="user@email.com"
+    PUBMED_API_KEY=""
+    ```
+
+
 
 # Local Deployment
 
