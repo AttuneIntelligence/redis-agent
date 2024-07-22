@@ -16,7 +16,7 @@ def search_wikipedia(query,
             'url': result.url,
             'description': trimmed_summary,
             'source': 'Wikipedia',
-            'reference_link': f":orange_book: [{result.title}]({result.url})"
+            'reference_link': ''
         }]
     except DisambiguationError as e:
         return [{
@@ -36,3 +36,5 @@ def search_wikipedia(query,
             'description': str(e),
             'source': 'Wikipedia'
         }]
+
+# 'reference_link': f":orange_book: [{result.title}]({result.url})"

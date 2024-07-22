@@ -107,45 +107,7 @@ class OpenAI:
             "time": time_elapsed,
             "tokens_per_second": tps
         }
-        if verbose:
-            print(f"==> Cost: ${inference_cost:0.4f}")
-            print(f"==> Time: {time_elapsed:0.1f} seconds")
-            print(f"==> TPS: {tps:0.1f} tokens / second")
         return response_messages, metadata
-
-    async def openai_async(self, 
-                           prompt,
-                           model,
-                           system_prompt=None,
-                           temperature=0.3):
-        timer = Timer()
-        if system_prompt:
-            response = await self.async_client.chat.completions.create(
-                model=model,
-                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
-                temperature=temperature,
-            )
-            text_response = response.choices[0].message.content.strip().replace("'", "")
-            compiled_prompt = f"{system_prompt} /n/n {prompt}"
-        else:
-            response = await self.async_client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=temperature,
-            )
-            text_response = response.choices[0].message.content.strip().replace("'", "")
-            compiled_prompt = prompt
-
-        ### GET METADATA FOR SINGLE REQUEST
-        time_taken = timer.get_elapsed_time()
-        metadata = self.MyAgent.Utilities.compile_openai_metadata(
-            ingress=compiled_prompt,
-            egress=text_response, 
-            time_taken=time_taken, 
-            model_name=model
-        )
-        return text_response, metadata
-
 
     def cost_calculator(self,
                         ingress,

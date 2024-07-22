@@ -25,7 +25,10 @@ class Toolkit:
         ### DEFINE THE TOOLSET VECTOR DATABASE IN MEMORY
         self.all_tools = self.load_tools()
         self.tool_definitions = self.load_tool_metadata()
-        self.toolkit_db = self.create_toolkit_db()
+        try:
+            self.toolkit_db = self.create_toolkit_db()
+        except Exception as e:
+            print(f"==> Toolkit vector db already exists in memory.")
             
     def read_tools(self):
         with open(self.tools_json, 'r') as file:

@@ -29,11 +29,15 @@ class MyAgent:
         self.agent_temperature = 0.4
         self.persona_temperature = 0.9
 
+        ### REDIS CHAT HISTORY
+        self.memory_token_len = 1800
+
         ### CLASS IMPORTS
         self.OpenAI = OpenAI(self)
         self.Utilities = Utilities(self)
         self.Agent_Queue = Agent_Queue(self)
         self.Toolkit = Toolkit(self)
+        self.Memory = Memory(self)
         
     #####################
     ### AGENT WRAPPER ###
@@ -42,23 +46,34 @@ class MyAgent:
                 user_json):
         timer = Timer()
 
-        ### GET CHAT HISTORY HERE ###
+        ### PULL CHAT HISTORY FROM REDIS
+        chat_thread = self.Memory.egress_memory(user_json['user_id'])['chat_history']
         
         ### EXECUTE AGENT
-        agent_results, agent_metadata = self.invoke_gpt_agent(user_json['question'])
+        print(f"==> Executing agent...")
+        chat_thread.append({'role': 'user', 'content': user_json['question']})
+        agent_results, agent_metadata = self.invoke_gpt_agent(chat_thread)
 
         ### STREAM RESPONSE WITH PERSONA
         final_response_messages, persona_metadata = self.agent_persona_generation(
             user_json=user_json,
-            chat_history=[],
+            chat_history=chat_thread,
             function_response=agent_results,
+        )
+
+        ### ADD CHAT HISTORY TO REDIS
+        chat_summary_metadata = self.Memory.ingress_memory( 
+            user_id=user_json['user_id'],
+            message_thread=chat_thread,
+            question=user_json['question'], 
+            response=final_response_messages[-1]['content']
         )
 
         ### COMPILE METADATA
         time_taken = timer.get_elapsed_time()
         execution_metadata = {
             'time': time_taken,
-            'cost': agent_metadata['cost'] + persona_metadata['cost'],
+            'cost': agent_metadata['cost'] + persona_metadata['cost'] + chat_summary_metadata.get('cost', 0),
             'time_to_first_token': persona_metadata['time_to_first_token'] + agent_metadata['time'],
             'tokens_per_second': persona_metadata['egress_tokens'] / time_taken,
             'n_agent_steps': agent_metadata['n_agent_steps'],
@@ -70,7 +85,7 @@ class MyAgent:
     ### CHAIN OF THOUGHT REASONING FOR PREPLANNING ###
     ##################################################
     def generate_plan(self,
-                      question,
+                      message_thread,
                       selected_tools):
         timer = Timer()
 
@@ -81,7 +96,8 @@ class MyAgent:
             available_function_names=', '.join([item['name'] for item in selected_tools]),
             n_agent_actions=self.n_agent_actions
         )
-        CoT_messages = [{"role": "system", "content": CoT_prompt}, {"role": "user", "content": question}]
+        CoT_messages = [{"role": "system", "content": CoT_prompt}]
+        CoT_messages.extend(message_thread)
         structured_plan_response = self.OpenAI.client.chat.completions.create(
             model=self.OpenAI.primary_model,
             messages=CoT_messages,
@@ -109,16 +125,17 @@ class MyAgent:
     ### AGENT EXECUTION ###
     #######################
     def invoke_gpt_agent(self,
-                         question):
+                         user_message_thread):
         timer = Timer()
         messages = []
         functions_called = []
         total_cost = 0
+        question = user_message_thread[-1]['content']
 
         #############################################
         ### 0 --> SELECT SUBSET OF RELEVANT TOOLS ###
         #############################################
-        selected_tools = self.Toolkit.query_toolkit_db(question)
+        selected_tools = self.Toolkit.query_toolkit_db(user_message_thread[-1]['content'])
         tool_names = ', '.join([tool["name"] for tool in selected_tools])
         tool_names_message = {"role": "function_metadata", "content": tool_names}
 
@@ -126,7 +143,7 @@ class MyAgent:
         ### 1 --> GENERATE A PLAN ###
         #############################
         generated_plan, planning_metadata = self.generate_plan(
-            question=question, 
+            message_thread=user_message_thread, 
             selected_tools=selected_tools
         )
         total_cost += planning_metadata['cost']
@@ -137,7 +154,7 @@ class MyAgent:
         n_function_calls = 0
         complete_function_responses = []
         step_01_actions = generated_plan['step_1']['actions']
-        if step_01_actions[0]["function"] != "return_answer":
+        if step_01_actions and step_01_actions[0]["function"] != "return_answer":
             ### RESPONSE FUNCTION CALLS --> REDIS QUEUE CALLS
             function_queue = self.compile_agent_functions(step_01_actions)
             functions_called.extend(step_01_actions)
@@ -207,7 +224,7 @@ class MyAgent:
             'n_agent_steps': n_function_calls,
             'functions_executed': functions_called
         }
-        print(f"==> Agent executed in {n_function_calls} steps for ${round(total_cost, 3)} ({time_taken} seconds).")
+        print(f"==> Agent executed in {n_function_calls} steps for ${round(total_cost, 4)} ({time_taken} seconds).")
         return best_function_responses, agent_metadata
 
     def agential_loop_execution(self,
@@ -292,15 +309,17 @@ class MyAgent:
         all_messages.append({"role": "system", "content": generation_prompt})
 
         ### ADD CHAT HISTORY
-        all_messages.extend(chat_history)
+        all_messages.extend(chat_history[:-1])   ### REMOVE QUESTION, REFERENCES COME FIRST FOR RELEVANCE ORDERING
 
         ### ADD COMPILED REFERENCE MATERIAL
         all_messages.append({"role": "user", "content": f"Compiled Reference Material: {json.dumps({'function_data': function_response})}"})
     
-        ### ADD QUESTION
+        ### THEN ADD QUESTION AS THE LAST MESSAGE
         input_message = {"role": "user", "content": user_json.get("question")}
         all_messages.append(input_message)
-    
+        if self.verbose:
+            self.Utilities.pretty_print(all_messages)
+                
         ### STREAM COMPLETION RESPONSE
         response_stream = self.OpenAI.client.chat.completions.create(
             messages=all_messages,
@@ -346,7 +365,7 @@ class MyAgent:
             "time_to_first_token": round(time_to_first_token, 3),
             "egress_tokens": egress_tokens,
         }
-        print(f"==> Persona response generated in {time_elapsed} seconds.")
+        print(f"==> Persona response generated for ${round(inference_cost, 4)} ({time_elapsed} seconds).")
         return response_messages, metadata
 
 
