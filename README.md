@@ -15,8 +15,9 @@
     <a href="https://twitter.com/reedbndr">
       <img src="https://img.shields.io/twitter/follow/reedbndr?style=social" alt="License" />
     </a>
+    <br>
     <!-- <blockquote>“Such is my task. I go to gather this, the sacred knowledge, here and there dispersed about the world, long lost or never found.”<br>- <i>Browning's Paracelsus</i></blockquote> -->
-    <blockquote>“Intelligence is a fixed goal with variable means of achieving it.”<i>William James</i></blockquote>
+    <blockquote>“Intelligence is a fixed goal with variable means of achieving it.”<br><i>-William James</i></blockquote>
     <br>
 </div>
 
