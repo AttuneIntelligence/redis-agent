@@ -134,7 +134,7 @@ The aggregated conversation thread is sent to ChatGPT with the instruction to th
 
 **Generated Plan**:
 
-```json
+```bash
 {
     'step_1': {
         'description': 'Identify the most common gene mutation in kidney cancer and gather information on researchers involved in studying these genes.',
