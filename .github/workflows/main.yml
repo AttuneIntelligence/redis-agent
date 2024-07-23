@@ -7,6 +7,8 @@ on:
     paths:
       - server/server.Dockerfile
       - server/requirements.txt
+      - client/package.json
+      - client/client.Dockerfile
       - .github/workflows/**
 
 env:
@@ -45,7 +47,21 @@ jobs:
           tags: |
             ${{ secrets.SERVER_REGISTRY_IMAGE }}:main-${{ env.CURRENT_DATE }}
             ${{ secrets.SERVER_REGISTRY_IMAGE }}:main
+          cache-from: |
+            type=registry,ref=${{ secrets.SERVER_REGISTRY_IMAGE }}:main
+          cache-to: |
+            type=inline
+
+      - name: Build and Push Client
+        uses: docker/build-push-action@v3
+        with:
+          context: client
+          file: client/client.Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.CLIENT_REGISTRY_IMAGE }}:main-${{ env.CURRENT_DATE }}
+            ${{ secrets.CLIENT_REGISTRY_IMAGE }}:main
           # cache-from: |
-          #   type=registry,ref=${{ secrets.SERVER_REGISTRY_IMAGE }}:main
+          #   type=registry,ref=${{ secrets.CLIENT_REGISTRY_IMAGE }}:main
           # cache-to: |
           #   type=inline
