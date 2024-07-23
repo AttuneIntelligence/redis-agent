@@ -85,21 +85,21 @@ The application client is a simple NextJS + React chat interface, deployed to lo
 ## Available Functions
 
 The default tools available to the `Redis-Agent` system work together to inform ChatGPT's response with source-referenced supplemental information. The following tools are available to the deployed agent:
-    * [Pubmed](https://pubmed.ncbi.nlm.nih.gov/)
-        - Access peer-reviewed clinical and biomedical research literature.
-    * [ClinicalTrials.gov](https://clinicaltrials.gov/)
-        - Access current clinical trials from arround the world.
-    * [arXiv](https://arxiv.org/)
-        - Access literature regarding physics, mathematics, computer science, and quantitative biology.
-    * [US Patent & Trademark Office](https://www.uspto.gov/patents/search)
-        - Access granted and submitted patents from the USPTO.
-    * [Neurips](https://proceedings.neurips.cc/)
-        - Access proceedings from the Neural Information Processing Systems conference.
-    * [Github](https://github.com/dashboard)
-        - Access source code repositories.
-    * [Google Scholars Profile](https://scholar.google.com/intl/en/scholar/citations.html)
-        - Access the scholar profile for any individual's academic research publications.
-    * [Google Search](https://www.google.com/webhp)
-        - Access the complete internet.
+* [Pubmed](https://pubmed.ncbi.nlm.nih.gov/)
+    - Access peer-reviewed clinical and biomedical research literature.
+* [ClinicalTrials.gov](https://clinicaltrials.gov/)
+    - Access current clinical trials from arround the world.
+* [arXiv](https://arxiv.org/)
+    - Access literature regarding physics, mathematics, computer science, and quantitative biology.
+* [US Patent & Trademark Office](https://www.uspto.gov/patents/search)
+    - Access granted and submitted patents from the USPTO.
+* [Neurips](https://proceedings.neurips.cc/)
+    - Access proceedings from the Neural Information Processing Systems conference.
+* [Github](https://github.com/dashboard)
+    - Access source code repositories.
+* [Google Scholars Profile](https://scholar.google.com/intl/en/scholar/citations.html)
+    - Access the scholar profile for any individual's academic research publications.
+* [Google Search](https://www.google.com/webhp)
+    - Access the complete internet.
 
 These functions work together as an integrated pool of source information available to the deployed digital agent.
