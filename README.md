@@ -68,7 +68,7 @@ PUBMED_API_KEY=""
 docker-compose up --build
 ```
 
-The application will then be made accessible at _[http://localhost:3000](http://localhost:3000)_.
+This will launch the application on your local machine, available at _[http://localhost:3000](http://localhost:3000)_.
 
 ---
 
@@ -79,3 +79,5 @@ The application will then be made accessible at _[http://localhost:3000](http://
 Prior to employing the agent workers, the user question is sent to GPT to generate a sequential plan of action with Chain-of-Thought reasoning, defining a logical series of function queries to pull source-referenced information to support the response generation.
 
 Chat history for the user's conversation is maintained in the Redis container, summarizing the chat thread with each iteration to fit within the LLM's context window limit.
+
+The application client is a simple NextJS + React chat interface, deployed to localhost for self-hosted deployment. The complete technical stack can also be deployed to a production application server.  
