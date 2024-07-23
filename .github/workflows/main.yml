@@ -61,7 +61,7 @@ jobs:
           tags: |
             ${{ secrets.CLIENT_REGISTRY_IMAGE }}:main-${{ env.CURRENT_DATE }}
             ${{ secrets.CLIENT_REGISTRY_IMAGE }}:main
-          # cache-from: |
-          #   type=registry,ref=${{ secrets.CLIENT_REGISTRY_IMAGE }}:main
-          # cache-to: |
-          #   type=inline
+          cache-from: |
+            type=registry,ref=${{ secrets.CLIENT_REGISTRY_IMAGE }}:main
+          cache-to: |
+            type=inline
