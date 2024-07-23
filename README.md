@@ -64,7 +64,6 @@ PUBMED_API_KEY=""
 ## Step 3: Deployment
 
 ```bash
-### START
 docker-compose up --build
 ```
 
