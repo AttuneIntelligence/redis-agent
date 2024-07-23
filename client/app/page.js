@@ -1,13 +1,17 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import Image from 'next/image';
-import { Send } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import Head from 'next/head';
+
+// Memoized components for better performance
+const MemoizedReactMarkdown = React.memo(ReactMarkdown);
+const MemoizedSyntaxHighlighter = React.memo(SyntaxHighlighter);
 
 export default function Chat() {
   const [userInput, setUserInput] = useState('');
@@ -29,7 +33,7 @@ export default function Chat() {
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
     }
   };
 
@@ -92,24 +96,57 @@ export default function Chat() {
     }
   };
 
+  // Memoized markdown components for better performance
+  const markdownComponents = useMemo(() => ({
+    code({ node, inline, className, children, ...props }) {
+      const match = /language-(\w+)/.exec(className || '');
+      return !inline && match ? (
+        <MemoizedSyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" {...props}>
+          {String(children).replace(/\n$/, '')}
+        </MemoizedSyntaxHighlighter>
+      ) : (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
+    },
+    a: ({ children, href, ...props }) => {
+      const isExternal = href && !href.startsWith('/') && !href.startsWith('#') && !href.includes('localhost');
+      return isExternal ? (
+        <a {...props} href={href} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+          {children}
+        </a>
+      ) : null;
+    },
+    p: ({ children }) => <p className="mb-2">{children}</p>,
+    h1: ({ children }) => <h1 className="text-3xl font-bold mb-2">{children}</h1>,
+    h2: ({ children }) => <h2 className="text-2xl font-bold mb-2">{children}</h2>,
+    h3: ({ children }) => <h3 className="text-xl font-bold mb-2">{children}</h3>,
+    h4: ({ children }) => <h4 className="text-lg font-bold mb-2">{children}</h4>,
+    h5: ({ children }) => <h5 className="text-base font-bold mb-2">{children}</h5>,
+    h6: ({ children }) => <h6 className="text-sm font-bold mb-2">{children}</h6>,
+    sup: ({ children }) => <sup className="align-super">{children}</sup>,
+    emoji: ({ children }) => <span className="emoji">{children}</span>,
+  }), []);
+
   return (
     <>
       <Head>
         <title>Redis Agent</title>
       </Head>
-      <div className="bg-gray-100 min-h-screen flex flex-col justify-center items-center p-4">
-        <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg overflow-hidden">
+      <div className="bg-gradient-to-b from-gray-100 to-gray-200 min-h-screen flex flex-col justify-center items-center p-4">
+        <div className="w-full max-w-4xl bg-white rounded-lg shadow-xl overflow-hidden transition-shadow duration-300 hover:shadow-2xl">
           <div
-            className="h-[calc(100vh-200px)] overflow-y-auto p-12"
+            className="h-[calc(100vh-200px)] overflow-y-auto p-6 md:p-12 space-y-6"
             ref={chatContainerRef}
           >
             {chatHistory.map((message, index) => (
               <div
                 key={index}
-                className={`flex items-start mb-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex items-start ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={`flex ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'} items-start max-w-[80%]`}>
-                  <div className="w-8 h-8 rounded-full flex-shrink-0 relative">
+                  <div className="w-10 h-10 rounded-full flex-shrink-0 relative overflow-hidden">
                     <Image
                       src={message.role === 'user' ? '/user-image-icon.jpg' : '/ai_image.png'}
                       alt={`${message.role} profile`}
@@ -118,88 +155,27 @@ export default function Chat() {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   </div>
-                  <div className={`mx-2 p-3 rounded-lg ${message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}>
-                    <ReactMarkdown
+                  <div 
+                    className={`mx-3 p-4 rounded-2xl ${
+                      message.role === 'user' 
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-gray-100 text-black'
+                    } shadow-md`}
+                  >
+                    <MemoizedReactMarkdown
                       className="prose max-w-none"
-                      components={{
-                        code({ node, inline, className, children, ...props }) {
-                          const match = /language-(\w+)/.exec(className || '');
-                          return !inline && match ? (
-                            <SyntaxHighlighter style={vscDarkPlus} language={match[1]} PreTag="div" {...props}>
-                              {String(children).replace(/\n$/, '')}
-                            </SyntaxHighlighter>
-                          ) : (
-                            <code className={className} {...props}>
-                              {children}
-                            </code>
-                          );
-                        },
-                        a: ({ children, href, ...props }) => {
-                          // Check if the href is an external link
-                          const isExternal = href && !href.startsWith('/') && !href.startsWith('#') && !href.includes('localhost');
-                          return isExternal ? (
-                            <a {...props} href={href} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                              {children}
-                            </a>
-                          ) : null;
-                        },
-                        p: ({ children, ...props }) => (
-                          <p {...props} className="mb-2">
-                            {children}
-                          </p>
-                        ),
-                        h1: ({ children, ...props }) => (
-                          <h1 {...props} className="text-3xl font-bold mb-2">
-                            {children}
-                          </h1>
-                        ),
-                        h2: ({ children, ...props }) => (
-                          <h2 {...props} className="text-2xl font-bold mb-2">
-                            {children}
-                          </h2>
-                        ),
-                        h3: ({ children, ...props }) => (
-                          <h3 {...props} className="text-xl font-bold mb-2">
-                            {children}
-                          </h3>
-                        ),
-                        h4: ({ children, ...props }) => (
-                          <h4 {...props} className="text-lg font-bold mb-2">
-                            {children}
-                          </h4>
-                        ),
-                        h5: ({ children, ...props }) => (
-                          <h5 {...props} className="text-base font-bold mb-2">
-                            {children}
-                          </h5>
-                        ),
-                        h6: ({ children, ...props }) => (
-                          <h6 {...props} className="text-sm font-bold mb-2">
-                            {children}
-                          </h6>
-                        ),
-                        sup: ({ children, ...props }) => (
-                          <sup {...props} className="align-super">
-                            {children}
-                          </sup>
-                        ),
-                        emoji: ({ children, ...props }) => (
-                          <span {...props} className="emoji">
-                            {children}
-                          </span>
-                        ),
-                      }}
+                      components={markdownComponents}
                       remarkPlugins={[remarkGfm]}
                       rehypePlugins={[rehypeRaw]}
                     >
                       {message.content}
-                    </ReactMarkdown>
+                    </MemoizedReactMarkdown>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          <div className="border-t p-4">
+          <div className="border-t p-4 bg-gray-50">
             <div className="flex items-end">
               <textarea
                 ref={textareaRef}
@@ -207,20 +183,23 @@ export default function Chat() {
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-black"
-                rows="1"
+                className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-black transition-all duration-200 ease-in-out"
                 style={{ minHeight: '44px', maxHeight: '120px' }}
               />
               <button
                 onClick={handleUserInput}
                 disabled={isLoadingResponse || !userInput.trim()}
-                className={`ml-2 p-2 rounded-full ${
+                className={`ml-3 p-3 rounded-full ${
                   isLoadingResponse || !userInput.trim()
                     ? 'bg-gray-300 cursor-not-allowed'
                     : 'bg-blue-500 hover:bg-blue-600'
-                } transition-colors duration-200`}
+                } transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
               >
-                <Send size={24} className="text-white" />
+                {isLoadingResponse ? (
+                  <Loader2 size={24} className="text-white animate-spin" />
+                ) : (
+                  <Send size={24} className="text-white" />
+                )}
               </button>
             </div>
           </div>
