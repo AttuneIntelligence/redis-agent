@@ -40,7 +40,7 @@ export default function Chat() {
 
     const JSON_TO_SERVER = {
       "user_id": '0123456789',
-      "display_name": "Reed",
+      "display_name": "user",
       "question": userInput.trim()
     };
 

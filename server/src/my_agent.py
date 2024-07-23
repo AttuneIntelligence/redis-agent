@@ -24,7 +24,7 @@ class MyAgent:
         self.redis_port = 6379
 
         ### AGENTIAL Q&A
-        self.n_agent_actions = 2   ### AGENT ITERATION LIMIT
+        self.n_agent_actions = 3   ### AGENT ITERATION LIMIT
         self.n_final_agent_results = 8   ### LENGTH OF FINAL FUNCTION RESULTS
         self.agent_temperature = 0.4
         self.persona_temperature = 0.9
@@ -83,7 +83,9 @@ class MyAgent:
         ### EXECUTE AGENT
         print(f"==> Executing agent...")
         chat_thread.append({'role': 'user', 'content': user_json['question']})
-        agent_results, agent_metadata = self.invoke_gpt_agent(chat_thread)
+        # agent_results, agent_metadata = self.invoke_gpt_agent(chat_thread)
+        return self.invoke_gpt_agent(chat_thread)
+
 
         ### STREAM RESPONSE WITH PERSONA
         final_response, persona_metadata = self.notebook_persona_generation(
@@ -178,6 +180,8 @@ class MyAgent:
             selected_tools=selected_tools
         )
         total_cost += planning_metadata['cost']
+        
+        return generated_plan
          
         #########################################################
         ### 2 --> EXECUTE STEP 1 OF THE PLAN IN REDIS WORKERS ###
