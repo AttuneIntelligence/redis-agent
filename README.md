@@ -74,17 +74,17 @@ This will launch the application on your local machine, available at _[http://lo
 
 # Features
 
-`Redis-Agent` integrates a [Redis Queue](https://redis.io/glossary/redis-queue/) to offload the execution of function calls to collection of workers in a first-in-first-out schema, leaving the primary Flask server free to process user requests. This allows for concurrent execution of multiple functions, reducing the time to first token generation of the streamed LLM response while executing multiple functions in parallel.
+`Redis-Agent` integrates a [Redis Queue](https://redis.io/glossary/redis-queue/) to offload the execution of function calls to a collection of workers in a first-in-first-out schema, leaving the primary Flask server free to process user requests. This allows for concurrent execution of multiple functions, reducing the time to first token generation of the streamed LLM response while rapidly executing multiple functions in parallel.
 
 Prior to employing the agent workers, the user's question is sent to GPT to generate a sequential plan of action with Chain-of-Thought reasoning, defining a logical series of function queries to pull source-referenced information to support the response generation.
 
-Chat history for the user's conversation is maintained in the Redis container, summarizing the chat thread with each iteration to fit within the LLM's context window limit while maintaining conversational context.
+Chat history for the user's conversation is maintained in the Redis container, summarizing the chat thread with each iteration to fit within the LLM's context window while maintaining conversational continuity.
 
-The application client is a simple NextJS + React chat interface, deployed to localhost for self-hosted interaction. The complete technical stack can also be deployed to a production application server with minimal changes.  
+The application client is a simple NextJS + React chat interface, deployed to localhost for self-hosted interaction. The complete technical stack can also be deployed to a production server with minimal changes.  
 
 ### Available Functions
 
-The default tools available to the `Redis-Agent` system work together to inform ChatGPT's response with source-referenced supplemental information. The following tools are available to the deployed agent:
+The default tools available to the `Redis-Agent` work together to inform ChatGPT's response with source-referenced supplemental information. The following tools are currently available to the agent:
 * [Pubmed](https://pubmed.ncbi.nlm.nih.gov/)
     - Access peer-reviewed clinical and biomedical research literature.
 * [ClinicalTrials.gov](https://clinicaltrials.gov/)
@@ -102,8 +102,6 @@ The default tools available to the `Redis-Agent` system work together to inform 
 * [Google Search](https://www.google.com/webhp)
     - Access the complete internet.
 
-These functions work together as an integrated pool of source information available to the deployed digital agent.
-
 ---
 
 # Chain of Action
@@ -118,7 +116,7 @@ With each question submitted to the NextJS client application, the following pro
 
 Interacting within the NextJS application exposed at [http://localhost:3000](http://localhost:3000), the user submits a question to the `Redis-Agent` within the context of an ongoing conversation.
 
-With this, the default user information provided in `client/app/page.js` is passed from the client to the server application along with the question asked.
+With this, the default user information provided in `client/app/page.js` is passed from the client to the server application along with the question.
 
 ## Step 2: Chat History Retrieval
 
@@ -128,9 +126,9 @@ ChatGPT summarizes this conversation history with each ingress that exceeds a pr
 
 ## Step 3: Chain-of-Thought Planning
 
-The aggregated conversation thread is sent to ChatGPT with the instruction to think of a series of steps necessary to adequately answer the provided question. This sequential reasoning allows the agent to conceptualize multi-step thought processes, defining the series of function calls which will source the proper information from the proper repositories.
+The aggregated conversation thread is sent to ChatGPT with the instruction to think of a series of steps necessary to adequately answer the provided question with the available tools. This sequential reasoning allows the agent to conceptualize multi-step thought processes, defining the series of function calls which will source the proper information from the proper repositories. For example:
 
-**Question**: "What is the most common gene mutation in kidney cancer, and who are the people researching those genes?"
+**Question**: "What are the most common gene mutations in kidney cancer, and who are the people researching those genes?"
 
 **Generated Plan**:
 
@@ -177,19 +175,19 @@ The aggregated conversation thread is sent to ChatGPT with the instruction to th
 }
 ```
 
-This chain of thought is organized such that information which can be concurrently generated is executed in the same step, and those steps which require supplemental knowledge from other functions are executed in subsequent steps.
+This chain of thought is organized such that information which can be concurrently generated is executed in the same step, and those steps which require supplemental knowledge from previous functions are executed in subsequent steps.
 
-With this pre-planning step, the agent is allowed to dynamically take thoughtful actions in parallel and in series while guarding against runaway function loops.
+With this pre-planning, the agent is allowed to dynamically take thoughtful actions in parallel and in series while guarding against runaway function loops.
 
 ## Step 4: Enqueue Redis Workers
 
 Starting with `step_1` of the generated plan, each of the parallel function calls are queued to the Redis workers for execution. 
 
-By offloading the work of functions to worker nodes, and launching their execution in parallel, the Flask server is left available to handle other user queries while dramatically improving the time-to-first-token compared to agents which serially execute functions. 
+By offloading the work of functions to worker nodes, and launching their execution in parallel, the Flask server is left available to handle other user queries while dramatically improving the time to first token compared to agents which serially execute functions. 
 
-Additionally, this offloads the work of potentially long-running functions away from the Flask server so it can remain available to route the requests of other users. While this is less of a concern for a locally running application, this architecture is well-suited for a production application which must handle many concurrent user requests.
+Additionally, this offloads the work of potentially long-running functions away from the Flask server so it can remain available to route the requests of other users. While this is less of a concern for a locally running application, this architecture is well-suited for a production deployment which must handle many concurrent user requests.
 
-These available functions are defined as static methods and wrapped in the `src/agent/tools.json` toolset definitions.
+These available functions are defined as static methods and wrapped in the `src/agent/tools.json` definitions.
 
 
 ## Step 5: Function Execution
@@ -200,15 +198,15 @@ When the function responses for `step_1` are returned by the Redis Queue, the pl
 
 ## Step 6: Response Generation
 
-Once the agent's execution has completed, the compressed conversation history, question, and compiled function responses are all compiled into a new prompt and sent back to ChatGPT for generation of the final response.
+Once the agent's execution has completed, the compressed conversation history, question, and compiled function responses are all integrated into a new prompt and sent back to ChatGPT for generation of the final response.
 
-This incorporates the agent's actions into a more personable persona, wrapping the derived information into a natural conversational response with source-derived information.
+This incorporates the agent's actions into a more personable persona, wrapping the derived information into a natural conversational response with the source-derived information.
 
 ## Step 7: Client Streaming
 
-This personalized response is streamed from ChatGPT back to the server, which is immediately streamed to the client application. 
+This personalized response is finally streamed from ChatGPT back to the server, which is immediately streamed into the client application. 
 
-The time-to-first-token, therefore, is drastically reduced enabling for a more naturally flowing conversation with the agent.
+The time to first token, therefore, is drastically reduced enabling for a more naturally flowing conversation with the agent while incorporating a diverse array of function responses.
 
 ---
 
