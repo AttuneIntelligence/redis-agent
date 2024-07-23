@@ -71,3 +71,11 @@ docker-compose up --build
 The application will then be made accessible at _[http://localhost:3000](http://localhost:3000)_.
 
 ---
+
+# Features
+
+`Redis-Agent` integrates a [Redis Queue](https://redis.io/glossary/redis-queue/) to offload the execution of function calls to collection of workers in a first-in-first-out schema, leaving the primary Flask server free to process user requests. This allows for concurrent execution of multiple functions, reducing the time to first token generation of the streamed LLM response while exuting multiple functions in parallel.
+
+Prior to employing the agent workers, the user question is sent to GPT to generate a sequential plan of action with Chain-of-Thought reasoning, defining a logical series of function queries to pull source-referenced information to support the response generation.
+
+Chat history for the user's conversation is maintained in the Redis container, summarizing the chat thread with each iteration to fit within the LLM's context window limit.
