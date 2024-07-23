@@ -202,6 +202,9 @@ Each of the Redis workers then executes the function with the query provided to 
 
 When the function responses for `step_1` are returned by the Redis Queue, the planning step is repeated to fill in the query definitions for the following step which is then re-submitted to the Redis workers. This process is repeated until the agent's max iterations are exceeded, or the stop sequence is returned by the function planner.
 
+Cosine similarity metrics are computed for each results and compared to the original question, returning only the maximally relevant results as input tokens to the final response generation.
+
+
 ## Step 6: Response Generation
 
 Once the agent's execution has completed, the compressed conversation history, question, and compiled function responses are all integrated into a new prompt and sent back to ChatGPT for generation of the final response.
