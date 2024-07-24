@@ -31,10 +31,6 @@ Created and maintained by _[Reed Bender](https://github.com/mrbende)_.
   <img src="assets/RedisAgentSchema.png" alt="Redis Agent Schema" />
 </div>
 
-<video width="320">
-  <source src="https://github.com/attuneintelligence/redis-agent/assets/Redis-Agent-demo.mp4" type="video/mp4">
-</video>
-
 ---
 
 # Getting Started
